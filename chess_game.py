@@ -1,6 +1,6 @@
-from src.minimax import minimax_decision
-from src.mcts import mcts_decision
-from src.board import Board
+from minimax import minimax_decision
+from mcts import mcts_decision
+from board import Board
 
 class ChessGame:
     def __init__(self):
