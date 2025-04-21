@@ -5,21 +5,20 @@ class Board:
         self.move_history = []
 
     def create_initial_board(self):
-        return [['R','N','B','Q','K','B','N','R'],
-                ['P']*8,
-                ['.']*8,
-                ['.']*8,
-                ['.']*8,
-                ['.']*8,
+        return [['r','n','b','q','k','b','n','r'],
                 ['p']*8,
-                ['r','n','b','q','k','b','n','r']]
+                ['.']*8,
+                ['.']*8,
+                ['.']*8,
+                ['.']*8,
+                ['P']*8,
+                ['R','N','B','Q','K','B','N','R']]
 
     def print_board(self):
         for row in self.state:
             print(" ".join(row))
 
     def get_legal_moves(self, color):
-        # Expanded pawn move logic with debug info
         direction = -1 if color == 'white' else 1
         pawn = 'P' if color == 'white' else 'p'
         legal_moves = []
@@ -27,18 +26,22 @@ class Board:
         for row in range(8):
             for col in range(8):
                 if self.state[row][col] == pawn:
+                    # Single forward move
                     next_row = row + direction
                     if 0 <= next_row < 8 and self.state[next_row][col] == '.':
                         start = f"{chr(col + ord('a'))}{8 - row}"
                         end = f"{chr(col + ord('a'))}{8 - next_row}"
                         legal_moves.append((start, end))
-                        # Initial double-step
+                        # Double step from starting row
                         if (color == 'white' and row == 6) or (color == 'black' and row == 1):
                             next_row2 = row + 2 * direction
                             if self.state[next_row2][col] == '.':
                                 end2 = f"{chr(col + ord('a'))}{8 - next_row2}"
                                 legal_moves.append((start, end2))
-        print(f"Legal moves ({color}):", legal_moves)
+        if legal_moves:
+            print(f"Legal moves ({color}):", legal_moves[:8], "...")  # print sample
+        else:
+            print(f"⚠️ No legal moves found for {color}")
         return legal_moves
 
     def apply_move(self, move):
