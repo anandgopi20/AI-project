@@ -1,4 +1,4 @@
-from evaluate import evaluate_board
+from evaluate import evaluate
 import pygame
 import os
 from board import Board
@@ -46,22 +46,27 @@ class ChessGUI:
                 if not self.board.is_game_over():
                     print('[DEBUG] AI thinking...')
                     if self.use_mcts:
-                        move = find_best_move_mcts(self.board, simulations=50, prefer_captures=True)
+                        move = find_best_move_mcts(self.board, simulations=50)
                     else:
                         move = find_best_move_minimax(self.board, depth=3)
+
                     if move:
                         print(f"AI plays: {move}")
-                        self.board.make_move(move)
-                        self.board.turn = 'white'
-                        self.move_log.append(move)
-                        eval_score = evaluate_board(self.board)
-                        print(f"[EVAL] After AI move ({move}): {eval_score:.2f}")
+                        success = self.board.make_move(move)
+                        if not success:
+                            print(f"[DEBUG] Invalid move attempted by AI: {move}")
+                        else:
+                            self.move_log.append(move)
+                            eval_score = evaluate(self.board)
+                            print(f"[EVAL] After AI move ({move}): {eval_score:.2f}")
+                            self.board.turn = 'white'
 
             self.draw_board()
             self.draw_selection()
             self.draw_eval()
             if self.board.is_game_over():
                 self.draw_game_over()
+            print(f"Turn:", self.board.turn)
             pygame.display.flip()
 
         print("Game Over")
@@ -76,7 +81,9 @@ class ChessGUI:
             if self.board.is_valid_move(move):
                 print(f"Human plays: {move}")
                 success = self.board.make_move(move)
-                if success:
+                if not success:
+                    print(f"[DEBUG] Invalid move attempted by Human: {move}")
+                else:
                     self.board.turn = 'black'
                     self.move_log.append(move)
                 self.selected = None
@@ -93,17 +100,10 @@ class ChessGUI:
     def draw_board(self):
         light = pygame.Color(238, 200, 160)
         dark = pygame.Color(170, 120, 80)
-        highlight_surface = pygame.Surface((TILE_SIZE, TILE_SIZE))
-        highlight_surface.set_alpha(100)
-        highlight_surface.fill((255, 255, 0))  # Yellow
         for row in range(8):
             for col in range(8):
                 color = light if (row + col) % 2 == 0 else dark
                 pygame.draw.rect(self.screen, color, pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-                if self.selected:
-                    move_str = f"{chr(col + 97)}{8 - row}"
-                    if any(m[2:] == move_str for m in self.legal_moves):
-                        self.screen.blit(highlight_surface, pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
                 piece = self.board.board[row][col]
                 if piece != '.':
                     color_prefix = 'w' if piece.isupper() else 'b'
@@ -121,12 +121,19 @@ class ChessGUI:
         self.screen.blit(text, (10, HEIGHT - 30))
 
     def draw_game_over(self):
+        if not self.board.get_legal_moves() and not self.board.is_checkmate():
+            font = pygame.font.SysFont(None, 48)
+            msg = "No legal moves!"
+            text = font.render(msg, True, pygame.Color('orange'))
+            rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+            self.screen.blit(text, rect)
         font = pygame.font.SysFont(None, 48)
         if self.board.is_checkmate():
             winner = 'Black' if self.board.turn == 'white' else 'White'
             message = f"Checkmate! {winner} wins."
         else:
             message = "Stalemate!"
+
         text = font.render(message, True, pygame.Color('red'))
         rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         pygame.draw.rect(self.screen, pygame.Color('black'), rect.inflate(20, 20))

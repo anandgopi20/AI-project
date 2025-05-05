@@ -1,11 +1,15 @@
-import sys
-import os
+import pygame
+from gui import ChessGUI
 
-# Add the src folder to Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '/Users/hadvi/Documents/Masters/2025Spring/IntrotoAI/AI_Chess_Project_Final'))
+def main():
+    print("Choose Mode:")
+    print("1. Human vs Minimax")
+    print("2. Human vs MCTS")
+    choice = input("Enter 1 or 2: ").strip()
 
-from chess_game import ChessGame
+    use_mcts = choice == '2'
+    game = ChessGUI(use_mcts=use_mcts)
+    game.run()
 
-if __name__ == "__main__":
-    game = ChessGame()
-    game.start()
+if __name__ == '__main__':
+    main()
