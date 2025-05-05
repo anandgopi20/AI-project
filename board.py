@@ -1,8 +1,8 @@
-
 class Board:
     def __init__(self):
         self.board = self.initialize_board()
         self.turn = 'white'
+        self.history = []  # Track move history for undo
 
     def initialize_board(self):
         return [
@@ -20,6 +20,7 @@ class Board:
         new_board = Board()
         new_board.board = [row[:] for row in self.board]
         new_board.turn = self.turn
+        new_board.history = self.history.copy()
         return new_board
 
     def make_move(self, move):
@@ -29,9 +30,24 @@ class Board:
         end_col = ord(move[2]) - ord('a')
 
         piece = self.board[start_row][start_col]
+        captured = self.board[end_row][end_col]
+
+        # Save move details for undo
+        self.history.append((move, piece, captured, self.turn, start_row, start_col, end_row, end_col))
+
         self.board[end_row][end_col] = piece
         self.board[start_row][start_col] = '.'
         self.turn = 'black' if self.turn == 'white' else 'white'
+
+    def undo_move(self):
+        if not self.history:
+            return
+
+        move, piece, captured, turn, start_row, start_col, end_row, end_col = self.history.pop()
+
+        self.board[start_row][start_col] = piece
+        self.board[end_row][end_col] = captured
+        self.turn = turn
 
     def is_valid_move(self, move):
         return move in self.get_legal_moves()
